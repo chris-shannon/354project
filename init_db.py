@@ -1,9 +1,15 @@
 import sqlite3
-connection =sqlite3.connect("grant.db")
+import os #lines 5 and 6
+database_name = "grant.db"
+
+if os.path.exists(database_name):
+    os.remove(database_name)  # Delete the database file
+    print("Old database deleted successfully.")
+    # Create a new database
+connection = sqlite3.connect(database_name)
+print("New database created successfully.")
 print(connection.total_changes)
 cursor = connection.cursor()
-
-
 #------------   TABLES  ----------------
 
 #create researcher table
@@ -85,8 +91,7 @@ cursor.execute("""CREATE TRIGGER IF NOT EXISTS delete_application_trigger
                FOR EACH ROW
                BEGIN
                    DELETE FROM Application_Collabs
-                   WHERE Aid = OLD.Aid;
-                    
+                   WHERE Aid = OLD.Aid; 
                    DELETE FROM Application_Reviewers
                    WHERE Aid = OLD.Aid;
                END;""")
@@ -112,16 +117,45 @@ cursor.execute("""CREATE TRIGGER IF NOT EXISTS delete_collab_application_trigger
                    WHERE Aid = OLD.Aid
                    AND principal_email = OLD.collaborator_email;
                END;""")
-
-#Check Valid Application Trigger
-cursor.execute("""CREATE TRIGGER IF NOT EXISTS check_valid_application
-               AFTER INSERT ON Applications
-               FOR EACH ROW
+#Add principal to collab Trigger
+cursor.execute("""CREATE TRIGGER IF NOT EXISTS add_principal_collab_trigger
+               After INSERT ON Applications
                BEGIN
-                   DELETE FROM Applications WHERE NEW.submission_date + 7 > (SELECT date FROM Meeting WHERE Mid = NEW.Cid) AND Aid = NEW.Aid;
+                   INSERT INTO Application_Collabs (Aid,collaborator_email)  VALUES (NEW.Aid, NEW.principal_email);
                END;""")
 
+#Check For Conflict of Interest trigger
+cursor.execute("""
+    CREATE TRIGGER IF NOT EXISTS check_reviewer_conflict
+    AFTER INSERT ON Application_Reviewers
+    FOR EACH ROW
+    BEGIN
+        DELETE FROM Application_Reviewers
+        WHERE reviewer_email = NEW.reviewer_email AND Aid = NEW.Aid
+        AND (SELECT organization
+             FROM Researcher
+             WHERE Email = NEW.reviewer_email) IN (
+                SELECT organization
+                FROM Researcher
+                JOIN Application_Collabs ON collaborator_email = Researcher.email
+                WHERE Application_Collabs.Aid = NEW.aid);
+    END;
+""")
 
+#Check Valid Application Trigger
+cursor.execute("""CREATE TRIGGER IF NOT EXISTS valid_application_trigger
+                AFTER INSERT ON Applications
+                FOR EACH ROW
+                BEGIN
+                    DELETE FROM Applications
+                WHERE Applications.submission_date >
+                    (SELECT Meeting.Date 
+                    FROM Applications 
+                    JOIN Competitions ON Applications.Cid = Competitions.Cid 
+                    JOIN Meeting ON Competitions.Mid = Meeting.Mid
+                    WHERE Applications.Aid = NEW.Aid)
+                    AND Applications.Aid = NEW.Aid;
+               END;""")
 #------------   DATA  ----------------
 
 #inserting into researchers
@@ -160,12 +194,12 @@ meeting_data = [
     (1, '2020-04-15'),
     (2, '2021-07-22'),
     (3, '2022-09-05'),
-    (4, '2023-01-18'),
+    (4, '2023-08-18'),
     (5, '2023-06-30'),
     (6, '2021-11-11'),
     (7, '2020-08-03'),
     (8, '2022-03-25'),
-    (9, '2024-05-09'),
+    (9, '2024-09-09'),
     (10, '2023-10-14')
 ]
 sql_insert = '''INSERT INTO Meeting (Mid, date) VALUES (?, ?)'''
@@ -183,26 +217,87 @@ competitions_data = [
     (8,"Chemistry", "Chemistry Competition 3", "Description of Chemistry Competition 3", "closed", 8),
     (9,"Computer Science", "Computer Science Competition 3", "Description of CS Competition 3", "open", 9),
     (10,"Biology", "Biology Competition 4", "Description of Biology Competition 4", "open", 10),
-    (11,"Biology", "Biology Competition 5", "Description of Biology Competition 5", "open", 11)   
+    (11,"Biology", "Biology Competition 5", "Description of Biology Competition 5", "open", 10)   
 ]
 sql_insert = "INSERT INTO Competitions (Cid, topic, title, description, status, Mid) VALUES (?,?, ?, ?, ?, ?)"
 cursor.executemany(sql_insert, competitions_data)
 
 #insert applications
-
 application_data = [
-    (1,1, '22@SFU.com', "Submitted", "2020-04-02", 1000.00, 0),
-    (2,1, '20@Harvard.com', "Submitted", "2020-04-03", 4000, 0),
-    (3,3, "email3@example.com", "Submitted", "2021-05-03", 2500, 0),
-    (4,4, "email4@example.com", "Submitted", "2023-05-15", 1000.00, 0),
-    (5,5, "email5@example.com", "Submitted", "2023-04-03", 1000.00, 0),
-    (6,3, "email6@example.com", "Submitted", "2020-04-03", 1000.00, 0),
-    (7,4, "email7@example.com", "Submitted", "2023-01-01", 1000.00, 0),
-    (8,8, "email8@example.com", "Submitted", "2022-03-25", 1000.00, 0),
-    (9,9, "email9@example.com", "Submitted", "2024-02-03", 1000.00, 0),
-    (10,9, "email10@example.com", "Submitted", "2024-01-03", 1000.00, 0),
-    (11,11, "email11@example.com", "Submitted", "2023-04-03", 1000.00, 0)
+    (1,1, '22@SFU.com', "Awarded", "2020-04-02", 1000, 500),
+    (2,1, '20@Harvard.com', "Awarded", "2020-02-13", 50000, 25000),
+    (3,3, '2@SFU.com', "Awarded", "2021-05-03", 2500, 1000),
+    (4,4, '4@TRU.com', "Awarded", "2023-05-15", 100000,50000),
+    (5,5, '20@Harvard.com', "Not Awarded", "2023-04-03", 1000.00, 0),
+    (6,3, '21@UBC.com', "Awarded", "2020-12-25", 55000, 50000),
+    (7,4, '7@SFU.com', "Not Awarded", "2023-01-01", 20000, 0),
+    (8,8, '21@UBC.com', "Not Awarded", "2022-03-25", 1000.00, 0),
+    (9,9, '23@Langara.com', "Submitted", "2024-02-03", 20000, 0),
+    (10,9, '25@Harvard.com', "Submitted", "2024-01-03", 25000, 0),
+    (11,11, '9@TRU.com', "Not Awarded", "2025-04-03", 1000.00, 0) #an invalid entry
 ]
-
 sql_insert = "INSERT INTO Applications (Aid, Cid, principal_email, status, submission_date, requested_amount, awarded_amount)VALUES (?, ?, ?, ?, ?, ?, ?)"
 cursor.executemany(sql_insert, application_data)
+
+#insert Collabs
+application_collabs_data = [
+    ('1@UBC.com',1),
+    ('3@Langara.com',2),
+    ('4@TRU.com',2),
+    ('5@Harvard.com',5),
+    ('8@Langara.com',6),
+    ('10@Harvard.com',1),
+    ('12@SFU.com',3),
+    ('13@Langara.com',3),
+    ('17@SFU.com',4),
+    ('25@Harvard.com',9),
+]
+sql_insert = "INSERT INTO Application_Collabs (collaborator_email,Aid)VALUES (?, ?)"
+cursor.executemany(sql_insert, application_collabs_data)
+
+#insert Reviewer
+application_reviewers_data = [
+    ('8@Langara.com',1),
+    ('12@SFU.com',5),
+    ('8@Langara.com',6),
+    ('9@TRU.com',1),
+    ('5@Harvard.com',3),
+    ('8@Langara.com',4),
+    ('9@TRU.com',5),
+    ('8@Langara.com',7),
+    ('16@UBC.com',7),
+    ('16@UBC.com',5),
+    ('23@Langara.com',1)
+]
+sql_insert = "INSERT INTO Application_Reviewers (reviewer_email,Aid)VALUES (?, ?)"
+cursor.executemany(sql_insert, application_reviewers_data)
+
+
+##--------------testing stuff remove later------------------
+# #prints finds aids with awarded_amount > 20000
+# cursor.execute("""SELECT Applications.Aid, Applications.submission_date, Meeting.Date 
+#             FROM Applications 
+#             JOIN Competitions ON Applications.Cid = Competitions.Cid 
+#             JOIN Meeting ON Competitions.Mid = Meeting.Mid
+#             WHERE Applications.awarded_amount > 20000
+#             """)
+# rows = cursor.fetchall()
+# for row in rows:
+#    print(row)
+# print("reviewer organization")
+# cursor.execute("""SELECT *
+#                 FROM Application_Reviewers
+#                """)
+# rows = cursor.fetchall()
+# for row in rows:
+#    print(row)
+# #finds organizations that reviewer can not be a part of 
+# print("schools reviewer cannot be a part of")
+# cursor.execute("""SELECT organization
+#                 FROM Application_Reviewers
+#                 JOIN Application_Collabs on Application_Collabs.Aid = Application_Reviewers.Aid
+#                 JOIN Researcher on Application_Collabs.collaborator_email = Researcher.email
+#                """)
+# rows = cursor.fetchall()
+# for row in rows:
+#    print(row)
