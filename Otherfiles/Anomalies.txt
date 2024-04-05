@@ -1,0 +1,52 @@
+BCNF: 
+Researcher (Email, first_name, last_name, organization)
+
+    Email -> first_name, last_name, organization
+
+    This table is in BCNF because the primary key, the "Email" is the only attribute that determins the rest of the tuple
+    - Two people with the same firt and last name can attend the same organization as we see in our daily lives
+
+Application_Collabs (Aid, collaborator_email)
+
+    This table is in BCNF because the primary key is the whole tuple. 
+    - We can have 2 different people collaborating in the same application 
+      as we can have one person researching in different applications 
+      Therefore, the only way to uniquely identify a touple is to know the 
+      Aid as well as the collaborator_email
+
+Application_Reviewers (aid, Reviewer_email, status)
+
+    This table is in BCNF because the primary key is the whole tuple. 
+      - We can have 2 different people reviewing the same application 
+        as we can have one person reviweing different applications 
+        Therefore, the only way to uniquely identify a touple is to know the 
+        Aid as well as the Reviewer_email
+
+Applications (Aid,  Cid, principal_email, status, submission_date, requested_amount, awarded_Amount) 
+
+    Aid -> Cid, principal_email, status, submission_date, requested_amount, awarded_amount
+
+    None of the attributes on the RHS can uniquely identify a touple, therefore this table is in BCNF
+    
+    Cid               - there can be multiple applications per Competition 
+    principal_email   - a researcher can be the principal researcher of multiple applications simultaneously
+    status            - many applications can be submitted not awarded_Amount, or awarded 
+    submission_date   - many application can be submitted the on the same date
+    requested_amount  - many applications can request the same amount
+    awarded_amount    - many applications can be rewarded the same amount
+    
+    Any proper subset of these attributes will not be able to uniquely identify a touple on a big or "normal sized" database
+
+Competitions (Cid, topic, title, description, status, Mid)
+
+    Cid -> topic, title, description, status, Mid
+
+    topic, title, description - can be reused for many compatitions
+    status            - many competitions can have the same status 
+    Mid               - many competitions are discussed in each meeting
+
+    Any proper subset of these attributes will not be able to uniquely identify a touple on a big or "normal sized" database
+
+Meeting (Mid, date)
+
+    This table is in BCNF because the primary key is the whole tuple.
