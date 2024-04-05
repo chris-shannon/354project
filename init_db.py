@@ -15,7 +15,6 @@ def db_initialization():
     print("New database created successfully.")
     print(connection.total_changes)
     cursor = connection.cursor()
-    
 
 #------------   TABLES  ----------------
 def createTables():
@@ -66,13 +65,11 @@ def createTables():
     cursor.execute("""CREATE TABLE IF NOT EXISTS Application_Reviewers (
                 aid INTEGER,
                 reviewer_email TEXT,
+                Status Text,
                 PRIMARY KEY (Aid, reviewer_email),
                 FOREIGN KEY (Aid) REFERENCES Applications(Aid),
                 FOREIGN KEY (reviewer_email) REFERENCES Researcher(Email))""")
-
-
 #------------   TRIGGERS  ----------------
-
 def createTriggers():
     #Delete Meeting Trigger
     cursor.execute("""CREATE TRIGGER IF NOT EXISTS delete_meeting_trigger
@@ -162,10 +159,7 @@ def createTriggers():
                     WHERE Applications.Aid = NEW.Aid)
                     AND Applications.Aid = NEW.Aid;
                END;""")
-    
-
 #------------   DATA  ----------------
-
 def insertData():
     #inserting into researchers
     researcher_data = [
@@ -216,17 +210,17 @@ def insertData():
 
     #insert Competition data
     competitions_data = [
-        (1,"Biology", "Biology Competition 1", "Description of Biology Competition 1", "open", 1),
+        (1,"Biology", "Biology Competition 1", "Description of Biology Competition 1", "closed", 1),
         (2,"Chemistry", "Chemistry Competition 1", "Description of Chemistry Competition 1", "closed", 2),
-        (3, "Computer Science", "Computer Science Competition 1", "Description of CS Competition 1", "open", 3),
-        (4,"Biology", "Biology Competition 2", "Description of Biology Competition 2", "open", 4),
+        (3, "Computer Science", "Computer Science Competition 1", "Description of CS Competition 1", "closed", 3),
+        (4,"Biology", "Biology Competition 2", "Description of Biology Competition 2", "closed", 4),
         (5,"Chemistry", "Chemistry Competition 2", "Description of Chemistry Competition 2", "closed", 5),
-        (6,"Computer Science", "Computer Science Competition 2", "Description of CS Competition 2", "open", 3),  
-        (7,"Biology", "Biology Competition 3", "Description of Biology Competition 3", "open", 7),
+        (6,"Computer Science", "Computer Science Competition 2", "Description of CS Competition 2", "closed", 3),  
+        (7,"Biology", "Biology Competition 3", "Description of Biology Competition 3", "closed", 7),
         (8,"Chemistry", "Chemistry Competition 3", "Description of Chemistry Competition 3", "closed", 8),
         (9,"Computer Science", "Computer Science Competition 3", "Description of CS Competition 3", "open", 9),
-        (10,"Biology", "Biology Competition 4", "Description of Biology Competition 4", "open", 10),
-        (11,"Biology", "Biology Competition 5", "Description of Biology Competition 5", "open", 10)   
+        (10,"Biology", "Biology Competition 4", "Description of Biology Competition 4", "closed", 10),
+        (11,"Biology", "Biology Competition 5", "Description of Biology Competition 5", "closed", 10)   
     ]
     sql_insert = "INSERT INTO Competitions (Cid, topic, title, description, status, Mid) VALUES (?,?, ?, ?, ?, ?)"
     cursor.executemany(sql_insert, competitions_data)
@@ -240,7 +234,7 @@ def insertData():
         (5,5, '20@Harvard.com', "Not Awarded", "2023-04-03", 1000.00, 0),
         (6,3, '21@UBC.com', "Awarded", "2020-12-25", 55000, 50000),
         (7,4, '7@SFU.com', "Not Awarded", "2023-01-01", 20000, 0),
-        (8,8, '21@UBC.com', "Not Awarded", "2022-03-25", 1000.00, 0),
+        (8,8, '21@UBC.com', "Awarded", "2022-03-25", 1000.00, 50),
         (9,9, '23@Langara.com', "Submitted", "2024-02-03", 20000, 0),
         (10,9, '25@Harvard.com', "Submitted", "2024-01-03", 25000, 0),
         (11,11, '9@TRU.com', "Not Awarded", "2025-04-03", 1000.00, 0) #an invalid entry
@@ -286,13 +280,47 @@ def insertData():
 
 
 def findLargeApplicationFromMonth(month):
- print()
+    cursor.execute("""SELECT C.title, A.Cid, A.awarded_amount
+                   FROM Competitions AS C
+                   JOIN Meeting AS M ON M.Mid = C.Mid
+                   JOIN Applications AS A ON C.Cid = A.Cid
+                   WHERE  strftime('%m', M.date) = ? 
+                   AND A.awarded_amount > 20000
+                   """, (month,)
+                   )               
+    rows = cursor.fetchall()
+    print("Format is Competion title, Aid, awarded_amount ")
+    for row in rows:
+       print(row)
+    input("Press enter to continue")
 
 def findLargestRequestsFromArea(area):
- print()
+    cursor.execute("""SELECT A.Aid, MAX(A.awarded_amount)
+                        FROM Competitions AS C 
+                        JOIN Applications AS A ON C.Cid = A.Cid 
+                        WHERE C.topic = ? 
+                   """, (area,)
+                   ) 
+    rows = cursor.fetchall()
+    print("Format is (Aid,awarded_amount) ")
+    for row in rows:
+       print(row)
+    input("Press enter to continue")
 
 def findLargestAmountAwardedFromDate(date):
- print() 
+    cursor.execute("""SELECT C.title, A.Cid, A.awarded_amount
+                   FROM Competitions AS C
+                   JOIN Meeting AS M ON M.Mid = C.Mid
+                   JOIN Applications AS A ON C.Cid = A.Cid
+                   WHERE   M.date < ? 
+                   AND A.awarded_amount = (SELECT MAX(awarded_amount) FROM Applications)
+                   """, (date,)
+                   ) 
+    rows = cursor.fetchall()
+    print("Format is (c.title, Cid, awarded_amount)")
+    for row in rows:
+       print(row)
+    input("Press enter to continue")
 
 def findAwardDiscrepancyFromArea(area):
  print()

@@ -27,17 +27,17 @@ while True:
     print("You selected:", number)
 
     if number == 1:
-        month = input("Enter the month: ")
+        month = input("Enter the month as number eg. 02 for feb:  ")
         print("The competitions with at least one large proposal for the month of", month, "are:")
         findLargeApplicationFromMonth(month)
 
     if number == 2:
-        area = input("Enter the area: ")
+        area = input("Enter the area(Biology,Chemistry,Computer Science are the only options): ")
         print("The proposal(s) that request(s) the largest amount of money for the area of", area, "is:")
         findLargestRequestsFromArea(area)
 
     if number == 3:
-        date = input("Enter the date: ")
+        date = input("Enter the date you search until eg. 2024-02-15: ")
         print("The proposals submitted before", date, "that are awarded the largest amount of money  are:")
         findLargestAmountAwardedFromDate(date)
 
