@@ -47,10 +47,6 @@ while True:
         findAwardDiscrepancyFromArea(area)
 
     if number == 5:
-        #while loop for different applications? until exit?
-        #get application id (should we show the applications that have not been reviewed yet?)
-        #option to see reviewers !(conflicts of interest) with researchers from application id
-        #assigning reviewers to application id
         while True:
             application_id = input("Enter the application id: ")
             print("The reviewers that have conflicts of interest with the researchers of the application are:")

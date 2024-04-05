@@ -297,7 +297,7 @@ def findLargestAmountAwardedFromDate(date):
 def findAwardDiscrepancyFromArea(area):
  print()
 
-def findCOIFreeReviewer(application_id):
+def findCOIFreeReviewers(application_id):
  print()
 
 def assignReviewer(application_id, reviewer):
