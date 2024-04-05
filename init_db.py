@@ -285,6 +285,27 @@ def insertData():
 
 
 
+def findLargeApplicationFromMonth(month):
+ print()
+
+def findLargestRequestsFromArea(area):
+ print()
+
+def findLargestAmountAwardedFromDate(date):
+ print() 
+
+def findAwardDiscrepancyFromArea(area):
+ print()
+
+def findCOIFreeReviewer(application_id):
+ print()
+
+def assignReviewer(application_id, reviewer):
+ print()
+
+def findNotReviewed(reviewer):
+ print()
+
 
 
 

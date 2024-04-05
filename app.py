@@ -29,7 +29,7 @@ while True:
     if number == 1:
         month = input("Enter the month: ")
         print("The competitions with at least one large proposal for the month of", month, "are:")
-        findLargeCompetitionFromMonth(month)
+        findLargeApplicationFromMonth(month)
 
     if number == 2:
         area = input("Enter the area: ")
@@ -47,13 +47,19 @@ while True:
         findAwardDiscrepancyFromArea(area)
 
     if number == 5:
-        assignReviewers()
         #while loop for different applications? until exit?
-
         #get application id (should we show the applications that have not been reviewed yet?)
-        #option to see !(conflicts of interest) with researchers from application id
-        #assing reviewers to application id
-        #
+        #option to see reviewers !(conflicts of interest) with researchers from application id
+        #assigning reviewers to application id
+        while True:
+            application_id = input("Enter the application id: ")
+            print("The reviewers that have conflicts of interest with the researchers of the application are:")
+            findCOIFreeReviewers(application_id)
+            reviewer = input("Enter the reviewer: ")
+            assignReviewer(application_id, reviewer)
+            if input("Do you want to assign another reviewer? (y/n): ") == "n":
+                break
+    
     if number == 6:
         reviewer = input("Enter the reviewer: ")
         print("The proposals that have not been reviewed by", reviewer, "are:")
