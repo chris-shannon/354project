@@ -1,0 +1,42 @@
+Assumptions:
+    - The only Reviewers are existing Researchers
+    - Researchers do not have a choice to opt out of being Reviewers 
+    - Meeting Date = Review Deadline
+    - Application Deadline = 7 days prior to Meeting Date
+    - Deleting a competition will delete the applications linked to that competition 
+    - Deleting an application will delete associated collaborators and reviewers
+    - Deleting a principal researcher will equal deleting the application
+    - Reviewers can not have more than 3 ongoing reviews to do
+    - A researcher is allowed to be Principal Researcher in more than one application simultaneously
+    - There can be multiple competitions for   
+
+Tables:
+
+Researcher (Email, first_name, last_name, organization)
+    - Holds information of all researchers
+
+Application_Collabs (Aid, collaborator_email)
+    - Links the collaborators to their respective application 
+    - Principal Researcher is also added as a collaborator to the application
+
+Application_Reviewers (aid, Reviewer_email, status)
+    - Keeps track of the reviewers to the applications 
+    - keeps track about the status of the review
+
+Applications (Aid,  Cid, principal_email, status, submission_date, requested_amount, awarded_Amount)
+    - Holds information about each application
+    - links to the competition table through Cid 
+
+Competitions (Cid, topic, title, description, status, Mid)
+    - Holds information about each competition
+    - links to meeting date throuhg Mid
+
+Meeting (Mid, date)
+    - Keeps track of the meeting date
+
+
+
+
+
+
+
