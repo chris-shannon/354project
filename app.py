@@ -49,7 +49,7 @@ while True:
     if number == 5:
         while True:
             application_id = input("Enter the application id: ")
-            print("The reviewers that have conflicts of interest with the researchers of the application are:")
+            print("The reviewers that do not have conflicts of interest with the researchers of the application are:")
             findCOIFreeReviewers(application_id)
             reviewer = input("Enter the reviewer: ")
             assignReviewer(application_id, reviewer)
